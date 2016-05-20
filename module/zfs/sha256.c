@@ -22,6 +22,9 @@
  * Copyright 2007 Sun Microsystems, Inc.  All rights reserved.
  * Use is subject to license terms.
  */
+/*
+ * Copyright 2013 Saso Kiselkov. All rights reserved.
+ */
 
 #include <sys/zfs_context.h>
 #include <sys/zio.h>
@@ -96,8 +99,10 @@ SHA256Transform(uint32_t *H, const uint8_t *cp)
 	H[4] += e; H[5] += f; H[6] += g; H[7] += h;
 }
 
+/*ARGSUSED*/
 void
-zio_checksum_SHA256(const void *buf, uint64_t size, zio_cksum_t *zcp)
+zio_checksum_SHA256(const void *buf, uint64_t size,
+    const void *ctx_template, zio_cksum_t *zcp)
 {
 	uint32_t H[8] = { 0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
 	    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19 };
@@ -125,3 +130,31 @@ zio_checksum_SHA256(const void *buf, uint64_t size, zio_cksum_t *zcp)
 	    (uint64_t)H[4] << 32 | H[5],
 	    (uint64_t)H[6] << 32 | H[7]);
 }
+
+
+
+/*ARGSUSED*/
+//void
+//zio_checksum_SHA512_native(const void *buf, uint64_t size,
+//    const void *ctx_template, zio_cksum_t *zcp)
+//{
+//	SHA2_CTX	ctx;
+//
+//	SHA2Init(SHA512_256, &ctx);
+//	SHA2Update(&ctx, buf, size);
+//	SHA2Final(zcp, &ctx);
+//}
+
+/*ARGSUSED*/
+//void
+//zio_checksum_SHA512_byteswap(const void *buf, uint64_t size,
+//    const void *ctx_template, zio_cksum_t *zcp)
+//{
+//	zio_cksum_t	tmp;
+//
+//	zio_checksum_SHA512_native(buf, size, ctx_template, &tmp);
+//	zcp->zc_word[0] = BSWAP_64(tmp.zc_word[0]);
+//	zcp->zc_word[1] = BSWAP_64(tmp.zc_word[1]);
+//	zcp->zc_word[2] = BSWAP_64(tmp.zc_word[2]);
+//	zcp->zc_word[3] = BSWAP_64(tmp.zc_word[3]);
+//}

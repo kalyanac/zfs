@@ -827,12 +827,22 @@ This property is not inherited.
 .ne 2
 .mk
 .na
-\fB\fBchecksum\fR=\fBon\fR | \fBoff\fR | \fBfletcher2,\fR| \fBfletcher4\fR | \fBsha256\fR\fR
+\fB\fBchecksum\fR=\fBon\fR | \fBoff\fR | \fBfletcher2,\fR| \fBfletcher4\fR | \fBsha256\fR | \fB sha256\fR | \fBskein\fR | \fBedonr\fR\fR
 .ad
 .sp .6
 .RS 4n
 Controls the checksum used to verify data integrity. The default value is \fBon\fR, which automatically selects an appropriate algorithm (currently, \fBfletcher4\fR, but this may change in future releases). The value \fBoff\fR disables integrity checking on user data. Disabling checksums is \fBNOT\fR a recommended practice.
 .sp
+The
+.Sy sha512 ,
+.Sy skein ,
+and
+.Sy edonr
+checksum algorithms require enabling the appropriate features on the
+pool. Please see
+.Xr zpool-features 5
+for more information on these algorithms.
+.Pp
 Changing this property affects only newly-written data.
 .RE
 

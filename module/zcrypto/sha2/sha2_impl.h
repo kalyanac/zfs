@@ -22,33 +22,45 @@
  * Copyright 2009 Sun Microsystems, Inc.  All rights reserved.
  * Use is subject to license terms.
  */
-/*
- * Copyright 2013 Saso Kiselkov. All rights reserved.
- */
 
-#ifndef	_ZFS_FLETCHER_H
-#define	_ZFS_FLETCHER_H
+#ifndef	_SHA2_IMPL_H
+#define	_SHA2_IMPL_H
 
-#include <sys/types.h>
-#include <sys/spa.h>
-
-#ifdef	__cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
-/*
- * fletcher checksum functions
- */
+typedef enum {
+	SHA1_TYPE,
+	SHA256_TYPE,
+	SHA384_TYPE,
+	SHA512_TYPE
+} sha2_mech_t;
 
-void fletcher_2_native(const void *, uint64_t, const void *, zio_cksum_t *);
-void fletcher_2_byteswap(const void *, uint64_t, const void *, zio_cksum_t *);
-void fletcher_4_native(const void *, uint64_t, const void *, zio_cksum_t *);
-void fletcher_4_byteswap(const void *, uint64_t, const void *, zio_cksum_t *);
-void fletcher_4_incremental_native(const void *, uint64_t, zio_cksum_t *);
-void fletcher_4_incremental_byteswap(const void *, uint64_t, zio_cksum_t *);
+#ifdef _KERNEL
+
+/*
+ * Context for SHA2 mechanism.
+ */
+typedef struct sha2_ctx {
+	sha2_mech_type_t	sc_mech_type;	/* type of context */
+	SHA2_CTX		sc_sha2_ctx;	/* SHA2 context */
+} sha2_ctx_t;
+
+/*
+ * Context for SHA2 HMAC and HMAC GENERAL mechanisms.
+ */
+typedef struct sha2_hmac_ctx {
+	sha2_mech_type_t	hc_mech_type;	/* type of context */
+	uint32_t		hc_digest_len;	/* digest len in bytes */
+	SHA2_CTX		hc_icontext;	/* inner SHA2 context */
+	SHA2_CTX		hc_ocontext;	/* outer SHA2 context */
+} sha2_hmac_ctx_t;
+
+#endif
 
 #ifdef	__cplusplus
 }
 #endif
 
-#endif	/* _ZFS_FLETCHER_H */
+#endif /* _SHA2_IMPL_H */
