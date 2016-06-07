@@ -432,7 +432,9 @@ dbuf_is_metadata(dmu_buf_impl_t *db)
  */
 unsigned int
 dbuf_cache_multilist_index_func(multilist_t *ml, void *obj)
- {
+{
+	dmu_buf_impl_t *db = obj;
+
 	/*
 	 * The assumption here, is the hash value for a given
 	 * dmu_buf_impl_t will remain constant throughout it's lifetime
@@ -478,7 +480,7 @@ dbuf_evict_one(void)
 {
 	int idx = multilist_get_random_index(&dbuf_cache);
 	multilist_sublist_t *mls = multilist_sublist_lock(&dbuf_cache, idx);
-
+	dmu_buf_impl_t *db; 
 	ASSERT(!MUTEX_HELD(&dbuf_evict_lock));
 
 	/*
@@ -489,7 +491,7 @@ dbuf_evict_one(void)
 	ASSERT3P(tsd_get(zfs_dbuf_evict_key), ==, NULL);
 	(void) tsd_set(zfs_dbuf_evict_key, (void *)B_TRUE);
 
-	dmu_buf_impl_t *db = multilist_sublist_tail(mls);
+	db = multilist_sublist_tail(mls);
 	while (db != NULL && mutex_tryenter(&db->db_mtx) == 0) {
 		db = multilist_sublist_prev(mls, db);
 	}
@@ -1829,8 +1831,6 @@ dbuf_undirty(dmu_buf_impl_t *db, dmu_tx_t *tx)
 	db->db_dirtycnt -= 1;
 
 	if (refcount_remove(&db->db_holds, (void *)(uintptr_t)txg) == 0) {
-		arc_buf_t *buf = db->db_buf;
-
 		ASSERT(db->db_state == DB_NOFILL || arc_released(db->db_buf));
 		dbuf_destroy(db);
 		return (B_TRUE);
@@ -2543,7 +2543,7 @@ __dbuf_hold_impl(struct dbuf_hold_impl_data *dh)
 	ASSERT3U(dh->dh_dn->dn_nlevels, >, dh->dh_level);
 
 	*(dh->dh_dbp) = NULL;
-top:
+	
 	/* dbuf_find() returns with db_mtx held */
 	dh->dh_db = dbuf_find(dh->dh_dn->dn_objset, dh->dh_dn->dn_object,
 	    dh->dh_level, dh->dh_blkid);
@@ -2579,7 +2579,7 @@ top:
 		return (SET_ERROR(ENOENT));
 	}
 
-	if (db->db_buf != NULL)
+	if (dh->dh_db->db_buf != NULL)
 		ASSERT3P(dh->dh_db->db.db_data, ==, dh->dh_db->db_buf->b_data);
 
 	ASSERT(dh->dh_db->db_buf == NULL || arc_referenced(dh->dh_db->db_buf));
@@ -2599,18 +2599,18 @@ top:
 			dh->dh_type = DBUF_GET_BUFC_TYPE(dh->dh_db);
 
 			dbuf_set_data(dh->dh_db,
-			    arc_alloc_buf(dn->dn_objset->os_spa,
+			    arc_alloc_buf(dh->dh_dn->dn_objset->os_spa,
 			    dh->dh_db->db.db_size, dh->dh_db, dh->dh_type));
 			bcopy(dh->dh_dr->dt.dl.dr_data->b_data,
 			    dh->dh_db->db.db_data, dh->dh_db->db.db_size);
 		}
 	}
 
-	if (multilist_link_active(&db->db_cache_link)) {
-		ASSERT(refcount_is_zero(&db->db_holds));
-		multilist_remove(&dbuf_cache, db);
+	if (multilist_link_active(&dh->dh_db->db_cache_link)) {
+		ASSERT(refcount_is_zero(&dh->dh_db->db_holds));
+		multilist_remove(&dbuf_cache, dh->dh_db);
 		(void) refcount_remove_many(&dbuf_cache_size,
-		    db->db.db_size, db);
+		    dh->dh_db->db.db_size, dh->dh_db);
 	}
 	(void) refcount_add(&dh->dh_db->db_holds, dh->dh_tag);
 	DBUF_VERIFY(dh->dh_db);
@@ -3599,7 +3599,7 @@ dbuf_write(dbuf_dirty_record_t *dr, arc_buf_t *data, dmu_tx_t *tx)
 #if defined(_KERNEL) && defined(HAVE_SPL)
 EXPORT_SYMBOL(dbuf_find);
 EXPORT_SYMBOL(dbuf_is_metadata);
-EXPORT_SYMBOL(dbuf_evict);
+EXPORT_SYMBOL(dbuf_destroy);
 EXPORT_SYMBOL(dbuf_loan_arcbuf);
 EXPORT_SYMBOL(dbuf_whichblock);
 EXPORT_SYMBOL(dbuf_read);
@@ -3614,7 +3614,6 @@ EXPORT_SYMBOL(dmu_buf_will_fill);
 EXPORT_SYMBOL(dmu_buf_fill_done);
 EXPORT_SYMBOL(dmu_buf_rele);
 EXPORT_SYMBOL(dbuf_assign_arcbuf);
-EXPORT_SYMBOL(dbuf_clear);
 EXPORT_SYMBOL(dbuf_prefetch);
 EXPORT_SYMBOL(dbuf_hold_impl);
 EXPORT_SYMBOL(dbuf_hold);

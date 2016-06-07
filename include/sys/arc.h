@@ -182,7 +182,7 @@ typedef struct arc_buf_info {
 	arc_state_type_t	abi_state_type;
 	arc_buf_contents_t	abi_state_contents;
 	uint32_t		abi_flags;
-	uint32_t		abi_datacnt;
+	uint32_t		abi_bufcnt;
 	uint64_t		abi_size;
 	uint64_t		abi_spa;
 	uint64_t		abi_access;
