@@ -594,7 +594,6 @@ typedef struct arc_stats {
 	kstat_named_t arcstat_l2_writes_done;
 	kstat_named_t arcstat_l2_writes_error;
 	kstat_named_t arcstat_l2_writes_lock_retry;
-	kstat_named_t arcstat_l2_writes_skip_toobig;
 	kstat_named_t arcstat_l2_evict_lock_retry;
 	kstat_named_t arcstat_l2_evict_reading;
 	kstat_named_t arcstat_l2_evict_l1cached;
@@ -687,7 +686,6 @@ static arc_stats_t arc_stats = {
 	{ "l2_writes_done",		KSTAT_DATA_UINT64 },
 	{ "l2_writes_error",		KSTAT_DATA_UINT64 },
 	{ "l2_writes_lock_retry",	KSTAT_DATA_UINT64 },
-	{ "l2_writes_skip_toobig",	KSTAT_DATA_UINT64 },
 	{ "l2_evict_lock_retry",	KSTAT_DATA_UINT64 },
 	{ "l2_evict_reading",		KSTAT_DATA_UINT64 },
 	{ "l2_evict_l1cached",		KSTAT_DATA_UINT64 },
@@ -877,7 +875,6 @@ uint64_t zfs_crc64_table[256];
 
 #define	L2ARC_WRITE_SIZE	(8 * 1024 * 1024)	/* initial write max */
 #define	L2ARC_HEADROOM		2			/* num of writes */
-#define	L2ARC_MAX_BLOCK_SIZE	(16 * 1024 * 1024)	/* max compress size */
 
 /*
  * If we discover during ARC scan any buffers to be compressed, we boost
@@ -895,7 +892,6 @@ unsigned long l2arc_write_max = L2ARC_WRITE_SIZE;	/* def max write size */
 unsigned long l2arc_write_boost = L2ARC_WRITE_SIZE;	/* extra warmup write */
 unsigned long l2arc_headroom = L2ARC_HEADROOM;		/* # of dev writes */
 unsigned long l2arc_headroom_boost = L2ARC_HEADROOM_BOOST;
-unsigned long l2arc_max_block_size = L2ARC_MAX_BLOCK_SIZE;
 unsigned long l2arc_feed_secs = L2ARC_FEED_SECS;	/* interval seconds */
 unsigned long l2arc_feed_min_ms = L2ARC_FEED_MIN_MS;	/* min interval msecs */
 int l2arc_noprefetch = B_TRUE;			/* don't cache prefetch bufs */
@@ -7320,9 +7316,6 @@ MODULE_PARM_DESC(l2arc_headroom, "Number of max device writes to precache");
 
 module_param(l2arc_headroom_boost, ulong, 0644);
 MODULE_PARM_DESC(l2arc_headroom_boost, "Compressed l2arc_headroom multiplier");
-
-module_param(l2arc_max_block_size, ulong, 0644);
-MODULE_PARM_DESC(l2arc_max_block_size, "Skip L2ARC buffers larger than N");
 
 module_param(l2arc_feed_secs, ulong, 0644);
 MODULE_PARM_DESC(l2arc_feed_secs, "Seconds between L2ARC writing");
