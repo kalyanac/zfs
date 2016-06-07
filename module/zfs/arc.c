@@ -5889,6 +5889,13 @@ arc_state_init(void)
 	refcount_create(&arc_mfu->arcs_size);
 	refcount_create(&arc_mfu_ghost->arcs_size);
 	refcount_create(&arc_l2c_only->arcs_size);
+
+	arc_anon->arcs_state = ARC_STATE_ANON;
+	arc_mru->arcs_state = ARC_STATE_MRU;
+	arc_mru_ghost->arcs_state = ARC_STATE_MRU_GHOST;
+	arc_mfu->arcs_state = ARC_STATE_MFU;
+	arc_mfu_ghost->arcs_state = ARC_STATE_MFU_GHOST;
+	arc_l2c_only->arcs_state = ARC_STATE_L2C_ONLY;
 }
 
 static void
@@ -6009,14 +6016,6 @@ arc_init(void)
 		arc_c = arc_c / 2;
 	if (arc_c < arc_c_min)
 		arc_c = arc_c_min;
-
-
-	arc_anon->arcs_state = ARC_STATE_ANON;
-	arc_mru->arcs_state = ARC_STATE_MRU;
-	arc_mru_ghost->arcs_state = ARC_STATE_MRU_GHOST;
-	arc_mfu->arcs_state = ARC_STATE_MFU;
-	arc_mfu_ghost->arcs_state = ARC_STATE_MFU_GHOST;
-	arc_l2c_only->arcs_state = ARC_STATE_L2C_ONLY;
 
 	arc_state_init();
 	buf_init();
